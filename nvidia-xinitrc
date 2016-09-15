@@ -1,6 +1,22 @@
-#!/bin/bash
-export LD_LIBRARY_PATH=/usr/lib64/nvidia/:/usr/lib32/nvidia:/usr/lib:$LD_LIBRARY_PATH
+#!/bin/sh
+
+envvaradd() {
+    local envvarstr
+    eval "envvarstr=\${$1}"
+    if [ -d "$2" ] && [[ ":$envvarstr:" != *":$2:"* ]]; then
+        if [ "$3" = "after" ]; then
+            export "$1"="${envvarstr:+"$envvarstr:"}$2"
+        else
+            export "$1"="$2${envvarstr:+":$envvarstr"}"
+        fi
+    fi
+}
+envvaradd "LD_LIBRARY_PATH" "/usr/lib/nvidia"
+envvaradd "LD_LIBRARY_PATH" "/usr/lib/x86_64-linux-gnu/nvidia"
+envvaradd "LD_LIBRARY_PATH" "/usr/lib/i386-linux-gnu/nvidia"
+
 xrandr --setprovideroutputsource modesetting NVIDIA-0
 xrandr --auto
 
-$*
+# invoke global X session script
+. /etc/X11/Xsession

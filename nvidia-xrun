@@ -36,23 +36,22 @@ if [ $# -eq 0 ]
 fi
 
 # calculate current VT
-LVT=`fgconsole`
+LVT=`sudo fgconsole`
 
 # calculate first usable display
 XNUM="-1"
 SOCK="something"
-while [ ! -z "$SOCK" ] 
+while [ ! -z "$SOCK" ]
 do
   XNUM=$(( $XNUM + 1 ))
   SOCK=$(ls -A -1 /tmp/.X11-unix | grep "X$XNUM" )
 done
-
 NEWDISP=":$XNUM"
 
 if [ ! -z "$*" ] # generate exec line if arguments are given
-then 
+then
   # test if executable exists
-  if [ ! -x "$(which $1 2> /dev/null)" ] 
+  if [ ! -x "$(which $1 2> /dev/null)" ]
   then
     echo "$1: No such executable!"
     exit 1
@@ -69,30 +68,23 @@ fi
 
 EXECL="/etc/X11/xinit/nvidia-xinitrc $EXECL"
 
-COMMAND="xinit $EXECL -- $NEWDISP vt$LVT -nolisten tcp -br -config nvidia-xorg.conf -configdir nvidia-xorg.conf.d"
+COMMAND="startx $EXECL -- $NEWDISP vt$LVT -background none -noreset -keeptty -verbose 7 -config nvidia-xorg.conf"
 
+echo "Configuring Xorg to use root as nvidia doesn't have kms"
+execute "sudo sed -i s/=no/=yes/g /etc/X11/Xwrapper.config"
+echo 'Setting glx for nvidia'
+execute "sudo update-alternatives --set glx /usr/lib/nvidia"
 echo 'Waking up nvidia GPU'
 execute "sudo tee /proc/acpi/bbswitch <<<ON"
-
 echo 'Loading nvidia module'
 execute "sudo modprobe nvidia"
-
-echo 'Loading nvidia_drm module'
 execute "sudo modprobe nvidia_drm"
-
 execute $COMMAND
-
 echo 'Unloading nvidia module'
-execute "sudo rmmod nvidia"
-
-echo 'Unloading nvidia_modeset module'
-execute "sudo rmmod nvidia_modeset"
-
-echo 'Unloading nvidia_drm module'
-execute "sudo rmmod nvidia_drm"
-
+execute "sudo rmmod nvidia_drm nvidia_modeset nvidia"
 echo 'Turning off nvidia GPU'
 execute "sudo tee /proc/acpi/bbswitch <<<OFF"
-
-echo -n 'Current state of nvidia GPU: '
-execute "cat /proc/acpi/bbswitch"
+echo 'Setting glx for intel/bumblebee'
+execute "sudo update-alternatives --set glx /usr/lib/nvidia/bumblebee"
+echo "Resetting Xorg for non-root login"
+execute "sudo sed -i s/=yes/=no/g /etc/X11/Xwrapper.config"

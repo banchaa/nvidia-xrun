@@ -23,16 +23,22 @@ An installation script (`sudo make install`) is a work-in-progress.
   1) install `xserver-xorg-legacy` (necessary to call `startx` as root). For
   best compatibility, make sure you have `bumblebee-nvidia` and
   `multiarch-support` installed too. 
+  
   2) copy `./nvidia-xrun` to somewhere in your `$PATH` (e.g.
   `/usr/bin/nvidia-xrun`)
+  
   3) copy `./nvidia-xinitrc` to `/etc/x11/xinit/nvidia-xinitrc`
+  
   4) copy `./nvidia-xorg.conf` to `/etc/x11/nvidia-xorg.conf`
 
 ## Usage: 
 
   1) switch to free tty
+  
   2) login
+  
   3) run `nvidia-xrun app`
+  
   4) enjoy
   
   
